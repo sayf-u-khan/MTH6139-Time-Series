@@ -1,0 +1,178 @@
+---
+title: "MTH6139 Time Series" 
+subtitle: "Coursework 1 -- Chadwell Heath station entries" 
+author: "Sayf Khan" 
+date: "Spring term 2025" 
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: spacelab 
+    highlight: tango
+---
+
+```{r, echo=FALSE}
+# This code will display the QMUL logo at the top right of the page
+# Do not change this code
+htmltools::img(src = knitr::image_uri("images/QMlogo.png"),
+               alt = 'logo',
+               style = 'position:absolute; top:0; right:0; padding:10px; width:20%;')
+```
+
+## 0. Meta's Prophet & Dependencies Installation
+
+### 0.1 Dependencies
+
+```{r dependency, message=FALSE, warning=FALSE}
+library(zoo)
+library(prophet)
+library(dplyr)
+library(forecast)
+ChadwellHeath = readxl::read_excel("data/ChadwellHeath.xlsx")
+```
+
+### 0.2 Prophet
+
+According to the instructions, I installed it via part (b) in the instructions given to me first but ran into the error,
+
+```         
+Error: Failed to install 'prophet' from GitHub:   Could not find tools necessary to compile a package Call `pkgbuild::check_build_tools(debug = TRUE)` to diagnose the problem.
+```
+
+So I went with the normal installation outlines in (a) which worked without issues.
+
+## 1. The Data
+
+The data we will be analysing today comes from TfL's large dataset on their website. I have chosen Chadwell Heath Station on the newly opened Elizabeth Line as this is one of my local stations that I use for commuting into London on a daily basis.
+
+The station has a long history as it is on the Great Eastern Mainline out from London Liverpool Street, it has been served by many different trains over the years and most recently been taken over by the Elizabeth Line in 2022 being part of a massive East-West network with trains from here going as far as Reading and Heathrow Airport.
+
+### 1.1 Formatting
+
+The date column is in a numeric format and so is not recognised by R as an actual date, we can remedy this by converting the column data into a date format. For this evaluation, we will be looking at entries through time.
+
+```{r}
+
+X = ChadwellHeath$TravelDate
+Y = ChadwellHeath$EntryTapCount
+Z = ChadwellHeath$ExitTapCount
+
+entries.df = data.frame(X,Y)
+
+entries.df <- entries.df %>% mutate(X = as.Date(as.character(X), format="%Y%m%d"))
+
+plot(entries.df,type = 'l'); summary(entries.df)
+
+class(entries.df)
+```
+
+While good, this is not actually a time series by the `class()` function. Lets change that,
+
+```{r}
+start_date <- min(entries.df$X)
+
+entries.ts = ts(entries.df$Y, start = c(as.numeric(format(start_date, "%Y")),as.numeric(format(start_date, "%j"))), frequency = 365)
+
+plot(entries.ts, main = 'Daily Entries at Chadwell Heath Station', xlab = 'Time', ylab = 'Entries')
+
+class(entries.ts)
+
+summary(entries.ts)
+```
+
+This is now looking a lot like a standard time series which doesn't exhibit any harsh heteroskadastic properties. While quite spiky, we can already make some preliminary observations using the function `decompose` that will allow us to split our time series of the current form
+
+$$
+X_t = m_t + S_t + Y_t
+$$
+
+into its constituents so we can analyse the trend, seasonal and residual error components respectively.
+
+```{r}
+
+entries.decomp <- decompose(entries.ts)
+
+plot(entries.decomp)
+```
+
+Here are some initial observations we can get from this simple decomposition:
+
+-   There is a definite positive trend of entries into the station as time goes on, it plateaus a bit midway through 2024 but that may just be due to the cut off. We will investigate this positive trend some more with Prophet.
+
+-   Seasonality-wise, there is a sort of recurring pattern that is seen each year during the summer periods naturally as people are away on holidays and all schools/universities are closed.
+
+-   Our random component has a slight recurring pattern which suggests there is more information hidden inside that is otherwise not explained by the seasonal or trend component of our time series.
+
+### 1.2 Meta's Prophet Analysis
+
+Lets use Meta's Prophet now to explore this time series some more. The command `prophet` allows us to see some detailed analysis on our time series
+
+```{r}
+
+# entries.meta = prophet(entries.df)
+```
+
+We get an error here as the columns were not labelled correctly,
+
+`Error in fit.prophet(m, df, ...) : Dataframe must have columns 'ds' and 'y' with the dates and values respectively.`
+
+Let's rename our columns accordingly...
+
+```{r}
+
+entries.df <- entries.df %>% rename(y = Y, ds = X)
+```
+
+...and try again.
+
+```{r}
+
+entries.meta = prophet(entries.df)
+```
+
+This was successful! Lets look at forecasting now as we can get a lot more information from that.
+
+### 1.3 Forecasting
+
+Now we can forecast some future values and see what we can find
+
+```{r}
+
+entries.forecast = make_future_dataframe(entries.meta, 365, freq = "day", include_history = TRUE)
+
+entries.predictions <- predict(entries.meta, entries.forecast)
+
+tail(entries.predictions)
+```
+
+```{r}
+plot(entries.meta, entries.predictions, type = 'l')
+```
+
+Key Observations:
+
+-   The overall trend which is given by the dark blue line appears to be increasing, suggesting growing commuter activity which would make sense as more people tend to use public transport year on year as the population naturally increases too.
+
+-   The sharp dips in predictions could indicate seasonal fluctuations like holidays or weekends.
+
+-   The confidence intervals widen toward the future, reflecting increased uncertainty in long-term predictions.
+
+### 1.4 Seasonality Analysis
+
+```{r}
+
+seasonal.entries.meta = prophet(entries.df, daily.seasonality = TRUE)
+prophet_plot_components(seasonal.entries.meta, entries.predictions)
+```
+
+We can clearly see there is a weekly trend going on where passenger entries build up from the start of the week and hit an average peak on Thursday before falling back off on Friday. This could be for a number of factors but I would surmise that people tend to work from home on Mondays and/or Fridays as people tend to enjoy a longer weekend.
+
+The yearly trend shows us the monthly trends of average commuters throughout the year. We can see a sharp increase in entries from January as people get back to work and then it continues to fluctuate throughout Q1. In Q2, we see a steady increase with no major dips before Q3 where the expected valley occurs as school finishes up and people go on holiday. Similarly, in September the entries increase again with much higher traffic in Q4 than the rest of the year which maintains itself until the expected December decline.
+
+On the larger scale, the trend is increasing over the years which makes sense as more and more people get to know the new train-line due to its continued success and ease of use.
+
+## 2. Conclusions
+
+To conclude, we have seen that the passenger entries at Chadwell Heath follow a time series model fairly well. We have great seasonality on the weekly and yearly scale which can give us great insights into the behaviours of commuters.
+
+One aspect I would like to explore more of if I were to revisit this data after learning some more about time series analysis would be the residual error component. We can see that there is definitely some more information stored there that can be extracted by comparing to other time series such as a detailed rainfall dataset for the Chadwell Heath area.
