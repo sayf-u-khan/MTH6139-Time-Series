@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/1344752/d5ec86ff11c84df0a0fa0f9c42d68d7b
+bundleId: https://api.rpubs.com/api/v1/document/1344752/d5ec86ff11c84df0a0fa0f9c42d68d7b
+url: http://rpubs.com/Sayf/1344752
+version: 1

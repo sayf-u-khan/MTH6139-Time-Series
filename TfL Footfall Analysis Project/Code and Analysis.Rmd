@@ -13,13 +13,14 @@ output:
 
 ```{r, echo=FALSE}
 # This code will display the QMUL logo at the top right of the page
-# Do not change this code
 htmltools::img(src = knitr::image_uri("images/QMlogo.png"),
                alt = 'logo',
                style = 'position:absolute; top:0; right:0; padding:10px; width:20%;')
 ```
 
-## 0. Meta's Prophet & Dependencies Installation
+## 0. Executive Summary
+
+This report presents a time-series analysis of passenger entry data for Chadwell Heath station, sourced from Transport for London (TfL). The primary objective was to model historical trends and develop a predictive forecast for future passenger footfall. Using Meta's Prophet model in R, the analysis successfully identified strong weekly and yearly seasonality corresponding with commuter behaviour. The final forecast demonstrated a high degree of accuracy, and the overall project was awarded a grade of 95%.
 
 ### 0.1 Dependencies
 
@@ -28,18 +29,8 @@ library(zoo)
 library(prophet)
 library(dplyr)
 library(forecast)
-ChadwellHeath = readxl::read_excel("data/ChadwellHeath.xlsx")
+ChadwellHeath = readxl::read_excel("data/Chadwell Heath Footfall Data (Cleaned).xlsx")
 ```
-
-### 0.2 Prophet
-
-According to the instructions, I installed it via part (b) in the instructions given to me first but ran into the error,
-
-```         
-Error: Failed to install 'prophet' from GitHub:   Could not find tools necessary to compile a package Call `pkgbuild::check_build_tools(debug = TRUE)` to diagnose the problem.
-```
-
-So I went with the normal installation outlines in (a) which worked without issues.
 
 ## 1. The Data
 
