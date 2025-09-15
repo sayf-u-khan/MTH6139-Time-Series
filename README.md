@@ -12,10 +12,14 @@ Implemented a Prophet forecasting model in R, which accurately predicted short-t
 
 The final analysis, including methodology and visualisations, was awarded a grade of 95%.
 
+<img width="1344" height="960" alt="image" src="https://github.com/user-attachments/assets/bddc7bca-5ef9-4576-bde5-b295541ecdab" />
+
 ## Technologies & Libraries Used
 Language: R
 Key Packages: prophet, tidyverse (for data manipulation), ggplot2 (for visualisation)
 
 ## How to View the Full Analysis
-The complete report and analysis can be viewed directly in the browser by opening the rendered HTML file:
-View the Full Report Here
+The complete report, including all code and visualisations, has been published on RPubs.
+
+**[Click here to view the full, interactive report.](https://rpubs.com/Sayf/station-footfall-analysis)**
+
