@@ -137,7 +137,7 @@ tail(entries.predictions)
 ```
 
 ```{r}
-plot(entries.meta, entries.predictions, type = 'l')
+plot(entries.meta, entries.predictions, type = 'l', xlab = 'Years', ylab = 'Daily Entries')
 ```
 
 Key Observations:
