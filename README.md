@@ -12,7 +12,7 @@ Implemented a Prophet forecasting model in R, which accurately predicted short-t
 
 The final analysis, including methodology and visualisations, was awarded a grade of 95%.
 
-<img width="1344" height="960" alt="image" src="https://github.com/user-attachments/assets/a963f6b5-702c-4ff5-b29f-64d3741e0427" />
+<img width="1344" height="960" alt="image" src="https://github.com/user-attachments/assets/208739fa-5cea-455b-b2c9-f06ada4848bb" />
 
 ## Technologies & Libraries Used
 Language: R
